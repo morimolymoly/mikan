@@ -20,10 +20,10 @@ struct MemoryMap<'a> {
     descriptor_version: usize,
 }
 
-fn save_memmap(file: &mut RegularFile, memmap: MemoryMap) {
+fn save_memmap(file: &mut RegularFile, _memmap: MemoryMap) {
     let header: &[u8] = "test".as_bytes();
     file.write(header).unwrap_success();
-    file.flush().unwrap_success();
+    //file.flush().unwrap_success();
 }
 
 #[entry]
@@ -32,7 +32,7 @@ fn efi_main(_handle: Handle, mut st: SystemTable<Boot>) -> Status {
 
     // Getting Memory map
     let mut memmap_buf: [u8; 4096*4] = [0; 4096*4];
-    let mut memmap = MemoryMap {
+    let  memmap = MemoryMap {
         buffer_size: size_of_val(&memmap_buf),
         buffer: &mut memmap_buf,
         map_size: 0,
@@ -54,6 +54,7 @@ fn efi_main(_handle: Handle, mut st: SystemTable<Boot>) -> Status {
     }
 
     save_memmap(&mut memmap_file, memmap);
+    memmap_file.close();
 
     loop{}
 }
