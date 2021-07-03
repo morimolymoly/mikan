@@ -4,6 +4,7 @@
 
 use byteorder::ByteOrder;
 use uefi::prelude::*;
+use uefi::proto::console::gop::{Mode, FrameBuffer, GraphicsOutput};
 use uefi::proto::media::file::File;
 use uefi::table::boot::{AllocateType, MemoryType};
 use uefi::table::boot;
@@ -92,13 +93,18 @@ fn efi_main(_handle: Handle, mut st: SystemTable<Boot>) -> Status {
     kernel_file.read(kernel_mem);
 
 
-    st.exit_boot_services(_handle, &mut buffer_kernel_info);
-
     let kernel_main = unsafe {
-        let f: extern "efiapi" fn() -> ! = core::mem::transmute(entry_point_address);
+        let f: extern "efiapi" fn(u64, u64) -> ! = core::mem::transmute(entry_point_address);
         f
     };
-    kernel_main();
+
+    let go = st.boot_services().locate_protocol::<GraphicsOutput>().unwrap().unwrap();
+    let go = unsafe {&mut *go.get()};
+    let frame_buffer_adress = go.frame_buffer().as_mut_ptr() as u64;
+    let frame_buffer_size = go.frame_buffer().size() as u64;
+
+    st.exit_boot_services(_handle, &mut buffer_kernel_info);
+    kernel_main(frame_buffer_adress, frame_buffer_size);
     loop{}
 }
 
