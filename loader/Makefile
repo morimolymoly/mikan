@@ -1,5 +1,5 @@
 build:
-	cargo +nightly build -Zbuild-std --target x86_64-unknown-uefi --release
+	cargo +nightly build --target x86_64-unknown-uefi --release
 
 run: build
 	mkdir -p mnt/EFI/BOOT
