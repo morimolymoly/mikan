@@ -1,6 +1,6 @@
-#![feature(abi_efiapi)]
 #![no_std]
 #![no_main]
+#![feature(abi_efiapi)]
 
 use uefi::prelude::*;
 use core::panic::PanicInfo;
