@@ -14,4 +14,3 @@ panic = "abort"
 
 [dependencies]
 uefi = { git = "https://github.com/rust-osdev/uefi-rs.git" }
-rlibc = "1.0.0"

@@ -2,8 +2,6 @@
 #![no_main]
 #![feature(abi_efiapi)]
 
-extern crate rlibc;
-
 use uefi::prelude::*;
 use core::panic::PanicInfo;
 use core::fmt::Write;
