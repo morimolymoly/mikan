@@ -6,6 +6,7 @@ build-std-features = ["compiler-builtins-mem"]
 target = "x86_64-unknown-linux-gnu"
 
 [target.x86_64-unknown-linux-gnu]
+linker = "ld.lld"
 rustflags = [
     # Build Options
     "-C", "no-redzone=yes",
@@ -13,6 +14,9 @@ rustflags = [
 
     # Linker Options
     "-C", "link-arg=--entry=kernel_main",
-    #"-C", "link-arg=--image-base=0x100000",
-    #"-C", "link-arg=-nmagic",
+    "-C", "link-arg=--image-base=0x100000",
+    "-C", "link-arg=-nmagic",
+    #"-C", "link-arg=-z=norelro",
+    "-C", "link-arg=--static",
+    #"-C", "link-arg=-z=separate-code",
 ]
