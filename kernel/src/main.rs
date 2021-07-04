@@ -7,6 +7,25 @@
 use core::{panic::PanicInfo, u8};
 use common::{PixelFormat, FrameBufferConfig};
 
+const kFontA: &'static [u8] = &[
+    0b00000000, //
+    0b00011000, //    **
+    0b00011000, //    **
+    0b00011000, //    **
+    0b00011000, //    **
+    0b00100100, //   *  *
+    0b00100100, //   *  *
+    0b00100100, //   *  *
+    0b00100100, //   *  *
+    0b01111110, //  ******
+    0b01000010, //  *    *
+    0b01000010, //  *    *
+    0b01000010, //  *    *
+    0b11100111, // ***  ***
+    0b00000000, //
+    0b00000000, //
+];
+
 #[derive(Clone, Copy, Debug)]
 struct PiexelColor {
     r: u8,
@@ -35,6 +54,19 @@ fn write_pixel(fconfig: FrameBufferConfig, x: u32, y: u32, color: PiexelColor) {
     }
 }
 
+fn write_ascii(fconfig: FrameBufferConfig, x: u32, y: u32, c: char, color: PiexelColor) {
+    if c != 'A' {
+        return;
+    }
+    for dy in 0..16 {
+        for dx in 0..8 {
+            if (kFontA[dy] << dx) & 0x80 == 0x80 {
+                write_pixel(fconfig, x + dx, y + dy as u32, color)
+            }
+        }
+    }
+}
+
 #[no_mangle]
 extern "efiapi" fn kernel_main(fconfig: FrameBufferConfig) -> ! {
     for x in 0..fconfig.horizontal_resolution {
@@ -50,7 +82,10 @@ extern "efiapi" fn kernel_main(fconfig: FrameBufferConfig) -> ! {
             write_pixel(fconfig, x, y, color)
         }
     }
-    
+
+    write_ascii(fconfig, 50, 50, 'A', PiexelColor{r: 0, g: 0, b: 0});
+    write_ascii(fconfig, 58, 50, 'A', PiexelColor{r: 0, g: 0, b: 0});
+
     loop{
         unsafe {
             asm!("hlt");
