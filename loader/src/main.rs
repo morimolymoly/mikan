@@ -17,6 +17,9 @@ use core::fmt::Write;
 
 use common::{PixelFormat, FrameBufferConfig};
 
+extern crate elf_rs;
+use elf_rs::*;
+
 #[allow(dead_code)]
 struct MemoryMap<'a> {
     buffer_size: usize,
@@ -36,7 +39,7 @@ fn write_frame_buffer_and_create_frame_buffer_config(st: &mut SystemTable<Boot>)
     let frame_buffer = go.frame_buffer().as_mut_ptr();
     let frame_buffer = unsafe { core::slice::from_raw_parts_mut(frame_buffer, frame_buffer_size as usize)};
     for i in 0..go.frame_buffer().size() {
-        frame_buffer[i] = 255;
+        //frame_buffer[i] = 255;
     }
 
     let frame_buffer_adress = go.frame_buffer().as_mut_ptr() as u64;
@@ -92,22 +95,76 @@ fn get_kernel_entry_point_address(st: &mut SystemTable<Boot>) -> u64{
     let mut buffer_kernel_info = [0;FILE_INFO_SIZE];
     let kernel_info: &mut FileInfo = kernel_file.get_info(&mut buffer_kernel_info).unwrap_success();
     let kernel_size = kernel_info.file_size();
-    let num_pages = (kernel_size as usize +  0xfff) / 0x1000;
 
-    let kernel_base_addr = 0x100000;
-    let _ = st.boot_services().allocate_pages(AllocateType::Address(kernel_base_addr), 
-    MemoryType::LOADER_DATA, 
-    num_pages
-    ).unwrap_success();
+    let kernel_tmp_buf = st.boot_services().allocate_pool(MemoryType::LOADER_DATA, kernel_size as usize).unwrap_success();
+    let kernel_tmp_buf_slice = unsafe {core::slice::from_raw_parts_mut(kernel_tmp_buf, kernel_size as usize)};
+    
+    kernel_file.read(kernel_tmp_buf_slice).unwrap_success();
+    kernel_file.close();
 
-    let kernel_mem_start = kernel_base_addr as *mut u8;
-    let kernel_mem = unsafe { core::slice::from_raw_parts_mut(kernel_mem_start, kernel_size as usize)};
-    let _read_size = kernel_file.read(kernel_mem).unwrap().unwrap();
+    let elf = Elf::from_bytes(kernel_tmp_buf_slice).unwrap();
 
-    let kernel_mem_p = (kernel_base_addr + 24) as *mut u8;
+    let mut kernel_start_addr = u64::max_value();
+    let mut kernel_end_addr = u64::min_value();
+
+    // enumerate header and calc address
+    if let Elf::Elf64(ref e) = elf {
+        for p in e.program_header_iter() {
+            let header = p.ph;
+            if header.ph_type() != ProgramType::LOAD {
+                continue;
+            }
+            kernel_start_addr = core::cmp::min(kernel_start_addr, header.vaddr());
+            kernel_end_addr = core::cmp::max(kernel_end_addr, header.vaddr() + header.memsz());
+        }
+    }
+
+    writeln!(st.stdout(), "kernel start: ={:x} kernel end: ={:x}", kernel_start_addr, kernel_end_addr).unwrap();
+
+    // allocate memory by papges
+    let num_pages = (kernel_end_addr - kernel_start_addr +  0xfff) / 0x1000;
+    
+    let mod_page = kernel_start_addr % 0x1000;
+    if mod_page != 0 {
+        writeln!(st.stdout(), "kernel start address is not aligned! {:x}", kernel_start_addr).unwrap();
+        let page_start_address = kernel_start_addr - mod_page;
+        writeln!(st.stdout(), "kernel start address aligned! {:x}", page_start_address).unwrap();
+        st.boot_services().allocate_pages(AllocateType::Address(page_start_address as usize), 
+        MemoryType::LOADER_DATA, 
+        (num_pages + 1) as usize
+        ).unwrap_success();
+    } else { 
+        st.boot_services().allocate_pages(AllocateType::Address(kernel_start_addr as usize), 
+        MemoryType::LOADER_DATA, 
+        num_pages as usize
+        ).unwrap_success();
+    }
+
+    // copy LOAD segment
+    if let Elf::Elf64(ref e) = elf {
+        for p in e.program_header_iter() {
+            let header = p.ph;
+            if header.ph_type() != ProgramType::LOAD {
+                continue;
+            }
+            let seg = p.segment();
+            let dst_addr = header.vaddr();
+            let seg_len = header.filesz();
+
+            let mut dst = unsafe { core::slice::from_raw_parts_mut(dst_addr as *mut u8, seg_len as usize) };
+            for i in 0..seg_len as usize{
+                dst[i] = seg[i];
+            }
+        }
+    }
+
+    let kernel_mem_p = (kernel_tmp_buf as u64 + 24) as *mut u8;
     let entry_point_address_buf = unsafe { core::slice::from_raw_parts(kernel_mem_p, 8)};
-    let entry_point_address = byteorder::LittleEndian::read_u64(entry_point_address_buf);
+    
+    let entry_point_address = byteorder::LittleEndian::read_u64(&entry_point_address_buf);
     writeln!(st.stdout(), "entry point address: ={:x}", entry_point_address).unwrap();
+
+    st.boot_services().free_pool(kernel_tmp_buf).unwrap_success();
 
     return entry_point_address;
 }
@@ -134,7 +191,6 @@ fn efi_main(handle: Handle, mut st: SystemTable<Boot>) -> Status {
 
     let mut buffer_exit_boot_service = [0;10000];
     st.exit_boot_services(handle, &mut buffer_exit_boot_service).unwrap_success();
-
     kernel_main(frame_buffer_config);
 }
 

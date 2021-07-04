@@ -16,3 +16,4 @@ panic = "abort"
 uefi = { git = "https://github.com/rust-osdev/uefi-rs.git" }
 byteorder = { version = "1", default-features = false}
 common = { path = "../common" }
+elf_rs = { git = "https://github.com/vincenthouyi/elf_rs" }
