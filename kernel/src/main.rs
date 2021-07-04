@@ -4,68 +4,13 @@
 #![feature(asm)]
 #![feature(abi_efiapi)]
 
+mod graphics;
+mod font;
+
 use core::{panic::PanicInfo, u8};
 use common::{PixelFormat, FrameBufferConfig};
+use graphics::{write_ascii, write_pixel, PiexelColor};
 
-const kFontA: &'static [u8] = &[
-    0b00000000, //
-    0b00011000, //    **
-    0b00011000, //    **
-    0b00011000, //    **
-    0b00011000, //    **
-    0b00100100, //   *  *
-    0b00100100, //   *  *
-    0b00100100, //   *  *
-    0b00100100, //   *  *
-    0b01111110, //  ******
-    0b01000010, //  *    *
-    0b01000010, //  *    *
-    0b01000010, //  *    *
-    0b11100111, // ***  ***
-    0b00000000, //
-    0b00000000, //
-];
-
-#[derive(Clone, Copy, Debug)]
-struct PiexelColor {
-    r: u8,
-    g: u8,
-    b: u8,
-}
-
-fn write_pixel(fconfig: FrameBufferConfig, x: u32, y: u32, color: PiexelColor) {
-    let pixel_pos = fconfig.pixels_per_scan_line * y + x;
-    let frame_buffer = unsafe { core::slice::from_raw_parts_mut(fconfig.frame_buffer,  fconfig.frame_buffer_size)};
-    let p = &mut frame_buffer[4 * pixel_pos as usize];
-    let p = unsafe { core::slice::from_raw_parts_mut(p, 3)};
-
-
-    match fconfig.pixel_format {
-        PixelFormat::RGBResv8BitPerColor => {     
-            p[0] = color.r;  
-            p[1] = color.g;
-            p[2] = color.b;
-        },
-        PixelFormat::BGRResv8BitPerColor => {
-            p[0] = color.b;
-            p[1] = color.g;
-            p[2] = color.r;
-        }
-    }
-}
-
-fn write_ascii(fconfig: FrameBufferConfig, x: u32, y: u32, c: char, color: PiexelColor) {
-    if c != 'A' {
-        return;
-    }
-    for dy in 0..16 {
-        for dx in 0..8 {
-            if (kFontA[dy] << dx) & 0x80 == 0x80 {
-                write_pixel(fconfig, x + dx, y + dy as u32, color)
-            }
-        }
-    }
-}
 
 #[no_mangle]
 extern "efiapi" fn kernel_main(fconfig: FrameBufferConfig) -> ! {
