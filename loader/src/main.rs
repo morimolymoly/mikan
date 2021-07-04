@@ -157,7 +157,10 @@ fn get_kernel_entry_point_address(st: &mut SystemTable<Boot>) -> u64{
             }
         }
     }
-
+ 
+    // get entry point address 
+    // the way to retrieve is idiot
+    // from tmpbuf not actual memory
     let kernel_mem_p = (kernel_tmp_buf as u64 + 24) as *mut u8;
     let entry_point_address_buf = unsafe { core::slice::from_raw_parts(kernel_mem_p, 8)};
     
