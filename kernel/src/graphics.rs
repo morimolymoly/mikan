@@ -29,13 +29,11 @@ pub fn write_pixel(fconfig: FrameBufferConfig, x: u32, y: u32, color: PiexelColo
 }
 
 pub fn write_ascii(fconfig: FrameBufferConfig, x: u32, y: u32, c: char, color: PiexelColor) {
-    use crate::font::kFontA;
-    if c != 'A' {
-        return;
-    }
+    use crate::font::get_font;
+    let font = get_font(c);
     for dy in 0..16 {
         for dx in 0..8 {
-            if (kFontA[dy] << dx) & 0x80 == 0x80 {
+            if (font[dy] << dx) & 0x80 == 0x80 {
                 write_pixel(fconfig, x + dx, y + dy as u32, color)
             }
         }

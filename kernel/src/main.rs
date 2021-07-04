@@ -29,7 +29,11 @@ extern "efiapi" fn kernel_main(fconfig: FrameBufferConfig) -> ! {
     }
 
     write_ascii(fconfig, 50, 50, 'A', PiexelColor{r: 0, g: 0, b: 0});
-    write_ascii(fconfig, 58, 50, 'A', PiexelColor{r: 0, g: 0, b: 0});
+    write_ascii(fconfig, 58, 50, 'B', PiexelColor{r: 0, g: 0, b: 0});
+    write_ascii(fconfig, 66, 50, 'C', PiexelColor{r: 0, g: 0, b: 0});
+    write_ascii(fconfig, 74, 50, 'D', PiexelColor{r: 0, g: 0, b: 0});
+    write_ascii(fconfig, 82, 50, 'E', PiexelColor{r: 0, g: 0, b: 0});
+    write_ascii(fconfig, 58, 50, 'F', PiexelColor{r: 0, g: 0, b: 0});
 
     loop{
         unsafe {

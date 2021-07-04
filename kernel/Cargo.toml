@@ -13,3 +13,4 @@ panic = "abort"
 
 [dependencies]
 common = { path = "../common" }
+font = { path = "../font" }
