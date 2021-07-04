@@ -91,23 +91,26 @@ fn get_kernel_entry_point_address(st: &mut SystemTable<Boot>) -> u64{
         kernel_file = RegularFile::new(kernel_file_handle);
     }
     
+    // retrieve file info
     const FILE_INFO_SIZE: usize = 1000;
     let mut buffer_kernel_info = [0;FILE_INFO_SIZE];
     let kernel_info: &mut FileInfo = kernel_file.get_info(&mut buffer_kernel_info).unwrap_success();
     let kernel_size = kernel_info.file_size();
 
+    // allocate kernel tmp buffer
     let kernel_tmp_buf = st.boot_services().allocate_pool(MemoryType::LOADER_DATA, kernel_size as usize).unwrap_success();
     let kernel_tmp_buf_slice = unsafe {core::slice::from_raw_parts_mut(kernel_tmp_buf, kernel_size as usize)};
     
+    // read kernel into tmp buffer
     kernel_file.read(kernel_tmp_buf_slice).unwrap_success();
     kernel_file.close();
 
+    // parse kernel ELF
     let elf = Elf::from_bytes(kernel_tmp_buf_slice).unwrap();
 
+    // enumerate header and calc address
     let mut kernel_start_addr = u64::max_value();
     let mut kernel_end_addr = u64::min_value();
-
-    // enumerate header and calc address
     if let Elf::Elf64(ref e) = elf {
         for p in e.program_header_iter() {
             let header = p.ph;
@@ -157,14 +160,13 @@ fn get_kernel_entry_point_address(st: &mut SystemTable<Boot>) -> u64{
             }
         }
     }
- 
-    // get entry point address 
-    // the way to retrieve is idiot
-    // from tmpbuf not actual memory
-    let kernel_mem_p = (kernel_tmp_buf as u64 + 24) as *mut u8;
-    let entry_point_address_buf = unsafe { core::slice::from_raw_parts(kernel_mem_p, 8)};
-    
-    let entry_point_address = byteorder::LittleEndian::read_u64(&entry_point_address_buf);
+
+    // get entry point address
+    let mut entry_point_address = 0;
+    if let Elf::Elf64(ref e) = elf {
+        entry_point_address = e.header().entry_point();
+    }
+
     writeln!(st.stdout(), "entry point address: ={:x}", entry_point_address).unwrap();
 
     st.boot_services().free_pool(kernel_tmp_buf).unwrap_success();
