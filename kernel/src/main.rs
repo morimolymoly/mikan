@@ -9,7 +9,7 @@ mod font;
 
 use core::{panic::PanicInfo, u8};
 use common::{PixelFormat, FrameBufferConfig};
-use graphics::{write_ascii, write_pixel, PiexelColor};
+use graphics::{write_ascii, write_string, write_pixel, PiexelColor};
 
 
 #[no_mangle]
@@ -34,6 +34,7 @@ extern "efiapi" fn kernel_main(fconfig: FrameBufferConfig) -> ! {
     write_ascii(fconfig, 74, 50, 'D', PiexelColor{r: 0, g: 0, b: 0});
     write_ascii(fconfig, 82, 50, 'E', PiexelColor{r: 0, g: 0, b: 0});
     write_ascii(fconfig, 58, 50, 'F', PiexelColor{r: 0, g: 0, b: 0});
+    write_string(fconfig, 50, 20, "SABISABISABI", PiexelColor{r: 0, g: 0, b: 0});
 
     loop{
         unsafe {

@@ -28,6 +28,14 @@ pub fn write_pixel(fconfig: FrameBufferConfig, x: u32, y: u32, color: PiexelColo
     }
 }
 
+pub fn write_string(fconfig: FrameBufferConfig, x: u32, y: u32, s: &str, color: PiexelColor) {
+    let mut i = 0;
+    for cc in s.chars() {
+        write_ascii(fconfig, x + 8 * i as u32, y, cc, color);
+        i+=1;
+    }
+}
+
 pub fn write_ascii(fconfig: FrameBufferConfig, x: u32, y: u32, c: char, color: PiexelColor) {
     use crate::font::get_font;
     let font = get_font(c);
