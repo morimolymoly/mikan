@@ -1,4 +1,6 @@
 use common::{PixelFormat, FrameBufferConfig};
+use core::ops::AddAssign;
+use core::ops::Add;
 
 #[derive(Clone, Copy, Debug)]
 pub struct PixelColor {
@@ -45,5 +47,40 @@ pub fn write_ascii(fconfig: FrameBufferConfig, x: u32, y: u32, c: char, color: P
                 write_pixel(fconfig, x + dx, y + dy as u32, color)
             }
         }
+    }
+}
+
+pub fn draw_rectangle(fconfig: FrameBufferConfig, pos: Vector2D<u32>, size: Vector2D<u32>, c: PixelColor) {
+    for dx in 0..size.x {
+        write_pixel(fconfig, pos.x + dx, pos.y , c);
+        write_pixel(fconfig, pos.x + dx, pos.y + size.y , c);
+    }
+    for dy in 0..size.y {
+        write_pixel(fconfig, pos.x, pos.y + dy , c);
+        write_pixel(fconfig, pos.x + size.x, pos.y + dy , c);
+    }
+}
+
+pub fn fill_rectangle(fconfig: FrameBufferConfig, pos: Vector2D<u32>, size: Vector2D<u32>, c: PixelColor) {
+    for dy in 0..size.y {
+        for dx in 0..size.x {
+            write_pixel(fconfig, pos.x + dx, pos.y + dy, c);
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct Vector2D<T> {
+    pub x: T,
+    pub y: T
+}
+
+impl<T> AddAssign for Vector2D<T> 
+    where T: Add<Output=T> + Copy + Clone {
+    fn add_assign(&mut self, other: Self) {
+        *self = Self {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        };
     }
 }

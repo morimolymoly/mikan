@@ -38,17 +38,6 @@ pub struct Console {
 }
 
 impl Console {
-    pub fn new(fconfig: FrameBufferConfig, fg_color: PixelColor, bg_color: PixelColor) -> Console {
-        Console {
-            cursor_row: 0,
-            cursor_column: 0,
-            fg_color: fg_color,
-            bg_color: bg_color,
-            fconfig: fconfig,
-            buffer: [[' '; COLUMNS]; ROWS],
-        }
-    }
-
     pub fn init(&mut self, fconfig: FrameBufferConfig, fg_color: PixelColor, bg_color: PixelColor) {
         self.fconfig = fconfig;
         self.fg_color = fg_color;
