@@ -1,4 +1,4 @@
-use std::{env, fs::{File, OpenOptions}, io::{prelude::*, BufReader, BufWriter}, path::Path, str::FromStr};
+use std::{fs::{File, OpenOptions}, io::{prelude::*, BufReader, BufWriter}, path::Path, str::FromStr};
 
 type Error = Box<dyn std::error::Error>;
 type Result<T> = std::result::Result<T, Error>;
@@ -20,7 +20,6 @@ fn build_hankaku_font() -> Result<()> {
         "pub const HANKAKU_FONT: [[u8; 16]; 256] = ["
     )?;
 
-    let mut reading_ascii =  false;
     let mut reading_cnt = 0;
 
     for line in input.lines() {
@@ -33,7 +32,6 @@ fn build_hankaku_font() -> Result<()> {
         if line.starts_with("0x") {
             writeln!(&mut output, "    //{}", line)?;
             writeln!(&mut output, "    [")?;
-            reading_ascii = true;
             reading_cnt = 0;
             continue;
         }
@@ -51,7 +49,6 @@ fn build_hankaku_font() -> Result<()> {
         writeln!(&mut output, "{},", binary_line);
 
         if reading_cnt == 16 {
-            reading_ascii = false;
             reading_cnt = 0;
             writeln!(&mut output, "    ],")?;
         }

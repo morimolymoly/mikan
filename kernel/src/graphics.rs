@@ -1,13 +1,13 @@
 use common::{PixelFormat, FrameBufferConfig};
 
 #[derive(Clone, Copy, Debug)]
-pub struct PiexelColor {
+pub struct PixelColor {
     pub r: u8,
     pub g: u8,
     pub b: u8,
 }
 
-pub fn write_pixel(fconfig: FrameBufferConfig, x: u32, y: u32, color: PiexelColor) {
+pub fn write_pixel(fconfig: FrameBufferConfig, x: u32, y: u32, color: PixelColor) {
     let pixel_pos = fconfig.pixels_per_scan_line * y + x;
     let frame_buffer = unsafe { core::slice::from_raw_parts_mut(fconfig.frame_buffer,  fconfig.frame_buffer_size)};
     let p = &mut frame_buffer[4 * pixel_pos as usize];
@@ -28,7 +28,7 @@ pub fn write_pixel(fconfig: FrameBufferConfig, x: u32, y: u32, color: PiexelColo
     }
 }
 
-pub fn write_string(fconfig: FrameBufferConfig, x: u32, y: u32, s: &str, color: PiexelColor) {
+pub fn write_string(fconfig: FrameBufferConfig, x: u32, y: u32, s: &str, color: PixelColor) {
     let mut i = 0;
     for cc in s.chars() {
         write_ascii(fconfig, x + 8 * i as u32, y, cc, color);
@@ -36,7 +36,7 @@ pub fn write_string(fconfig: FrameBufferConfig, x: u32, y: u32, s: &str, color: 
     }
 }
 
-pub fn write_ascii(fconfig: FrameBufferConfig, x: u32, y: u32, c: char, color: PiexelColor) {
+pub fn write_ascii(fconfig: FrameBufferConfig, x: u32, y: u32, c: char, color: PixelColor) {
     use crate::font::get_font;
     let font = get_font(c);
     for dy in 0..16 {

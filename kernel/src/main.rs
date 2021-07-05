@@ -6,35 +6,34 @@
 
 mod graphics;
 mod font;
+mod console;
 
-use core::{panic::PanicInfo, u8};
+use core::panic::PanicInfo;
 use common::{PixelFormat, FrameBufferConfig};
-use graphics::{write_ascii, write_string, write_pixel, PiexelColor};
+use graphics::{write_ascii, write_string, write_pixel, PixelColor};
+use console::Console;
 
 
 #[no_mangle]
 extern "efiapi" fn kernel_main(fconfig: FrameBufferConfig) -> ! {
     for x in 0..fconfig.horizontal_resolution {
         for y in 0..fconfig.vertical_resolution {
-            let color = PiexelColor{r: 255, g: 255, b: 255};
+            let color = PixelColor{r: 255, g: 255, b: 255};
             write_pixel(fconfig, x, y, color);
         }
     }
 
     for x in 0..200 {
         for y in 0..100 {
-            let color = PiexelColor{r: 0, g: 255, b: 0};
+            let color = PixelColor{r: 0, g: 255, b: 0};
             write_pixel(fconfig, x, y, color)
         }
     }
 
-    write_ascii(fconfig, 50, 50, 'A', PiexelColor{r: 0, g: 0, b: 0});
-    write_ascii(fconfig, 58, 50, 'B', PiexelColor{r: 0, g: 0, b: 0});
-    write_ascii(fconfig, 66, 50, 'C', PiexelColor{r: 0, g: 0, b: 0});
-    write_ascii(fconfig, 74, 50, 'D', PiexelColor{r: 0, g: 0, b: 0});
-    write_ascii(fconfig, 82, 50, 'E', PiexelColor{r: 0, g: 0, b: 0});
-    write_ascii(fconfig, 58, 50, 'F', PiexelColor{r: 0, g: 0, b: 0});
-    write_string(fconfig, 50, 20, "SABISABISABI", PiexelColor{r: 0, g: 0, b: 0});
+    let mut console = Console::new(fconfig, PixelColor{r: 0, g: 0, b: 0}, PixelColor{r: 255, g: 255, b: 255});
+    console.put_string("Hello!!!!!!!!\n");
+    console.put_string("Hello!!!!!!!!\n");
+
 
     loop{
         unsafe {
