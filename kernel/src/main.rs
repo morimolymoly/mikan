@@ -15,6 +15,8 @@ use graphics::{write_ascii, write_string, write_pixel, PixelColor, fill_rectangl
 use console::{CONSOLE};
 use mouse::{MOUSE_CURSOR_FONT, MOUSE_HEIGHT, MOUSE_WIDTH};
 
+use  core::arch::asm;
+
 const kDesktopBGColor: PixelColor = PixelColor {
     r: 45, 
     g: 118,
